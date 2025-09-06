@@ -1,4 +1,4 @@
-name: Mi Laboratorio con Dominio FIJO REAL (No-IP)
+name: Mi Laboratorio con Dominio Fijo (Instalación Manual)
 
 on:
   workflow_dispatch:
@@ -7,9 +7,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. Trae tus archivos
       - name: Descargar mis archivos
         uses: actions/checkout@v4
 
+      # 2. Prepara el servidor SSH
       - name: Configurar Servidor SSH
         run: |
           echo "runner:runner" | sudo chpasswd
@@ -17,12 +19,11 @@ jobs:
           sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo service ssh start
 
-      - name: Instalar y Configurar No-IP DUC
+      # --- LA SOLUCIÓN DEFINITIVA: INSTALACIÓN MANUAL ---
+      - name: Instalar No-IP DUC (Modo No Interactivo)
         run: |
-          # Nos movemos a una carpeta donde SÍ tenemos permisos
+          # Descargamos y descomprimimos como antes
           cd /home/runner
-          
-          # Descargamos el cliente
           wget https://www.noip.com/client/linux/noip-duc-linux.tar.gz
           tar xf noip-duc-linux.tar.gz
           cd noip-2.1.9-1/
@@ -30,18 +31,23 @@ jobs:
           # Instalamos las herramientas para compilar
           sudo apt-get update && sudo apt-get install -y make gcc
           
-          # Compilamos e instalamos
-          sudo make install
+          # ¡LA MAGIA! Compilamos el programa, pero sin instalarlo de forma interactiva
+          make
+          
+          # Copiamos el programa compilado a su sitio final nosotros mismos
+          sudo cp noip2 /usr/local/bin/noip2
           
           # Creamos el archivo de configuración con tus datos
           sudo bash -c 'cat <<EOF > /usr/local/etc/no-ip2.conf
           Personal=ricardocraft121@gmail.com
           Password=titaBELLA
           Host=vps-ricardo.ddns.net
+          # Fin de la configuración
           EOF'
           
           # Ejecutamos el cliente
           sudo /usr/local/bin/noip2
 
+      # Mantiene la VPS viva
       - name: Mantener viva la conexión
         run: sleep 21000
